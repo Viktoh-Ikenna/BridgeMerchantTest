@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = 'https://fakestoreapi.com';
+import {API_BASE} from '@env';
 
 export const fetchCategories = async () => {
      const {data} = await axios.get(`${API_BASE}/products/categories`);
