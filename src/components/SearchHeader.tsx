@@ -6,7 +6,8 @@ const SearchHeader: React.FC<{
      searchQuery: string;
      setSearchQuery: (query: string) => void;
      onClearSearch: () => void;
-}> = ({searchQuery, setSearchQuery, onClearSearch}) => {
+     onFilter: () => void;
+}> = ({searchQuery, setSearchQuery, onClearSearch, onFilter}) => {
      return (
           <HStack
                alignItems="center"
@@ -27,7 +28,7 @@ const SearchHeader: React.FC<{
                          InputRightElement={
                               searchQuery ? (
                                    <Pressable onPress={onClearSearch} mr="2">
-                                        <CancelIcon  />
+                                        <CancelIcon />
                                    </Pressable>
                               ) : (
                                    <></>
@@ -57,7 +58,8 @@ const SearchHeader: React.FC<{
                     alignItems="center"
                     _pressed={{
                          bg: '#E6E6E6',
-                    }}>
+                    }}
+                    onPress={onFilter}>
                     <SearchFilterIcon width={20} height={20} fill="#6FAF4A" />
                </Pressable>
           </HStack>

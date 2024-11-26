@@ -8,6 +8,9 @@ import {
      Text,
      Center,
      Animated as RNAnimated,
+     Modal,
+     Button,
+     Radio,
 } from 'native-base';
 import SearchHeader from '../components/SearchHeader';
 import SearchHistory from '../components/SearchHistory';
@@ -33,6 +36,8 @@ const SearchScreen = () => {
      const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
      const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
      const [currentSessionQuery, setCurrentSessionQuery] = useState<string | null>(null);
+     const [isFilterVisible, setFilterVisible] = useState(false);
+     const [filterType, setFilterType] = useState<'all' | 'categories' | 'products'>('all');
 
      // Animation state
      const opacity = useSharedValue(0);
@@ -130,7 +135,28 @@ const SearchScreen = () => {
                          searchQuery={searchQuery}
                          setSearchQuery={handleSearch}
                          onClearSearch={handleClearSearch}
+                         onFilter={() => setFilterVisible(!isFilterVisible)}
                     />
+                    {isFilterVisible && (
+                         <Box p={4} bg="#f9f9f9" borderRadius="12" mb={4}>
+                              <Text fontWeight="bold" mb={2}>
+                                   Filter Results
+                              </Text>
+                              <Radio.Group
+                                   value={filterType}
+                                   onChange={value =>
+                                        setFilterType(value as 'all' | 'categories' | 'products')
+                                   }>
+                                   <Radio value="all" mb={1}>
+                                        All
+                                   </Radio>
+                                   <Radio value="categories" mb={1}>
+                                        Categories
+                                   </Radio>
+                                   <Radio value="products">Products</Radio>
+                              </Radio.Group>
+                         </Box>
+                    )}
                     <SearchHistory
                          history={searchHistory}
                          onClear={handleClearHistory}
@@ -138,37 +164,61 @@ const SearchScreen = () => {
                     />
 
                     <VStack mt={6}>
-                         <Animated.View style={[animationStyle]}>
-                              {loadingCategories ? (
-                                   <HStack flexWrap="wrap" justifyContent="space-between">
-                                        {[...Array(4)].map((_, index) => (
-                                             <Skeleton
-                                                  key={index}
-                                                  h="100px"
-                                                  w="45%"
-                                                  m={2}
-                                                  borderRadius="12"
-                                                  startColor="gray.300"
-                                                  endColor="gray.100"
-                                             />
-                                        ))}
-                                   </HStack>
-                              ) : categoryError ? (
-                                   <Center>
-                                        <Text color="red.500">Failed to load categories.</Text>
-                                   </Center>
-                              ) : searchQuery && filteredCategories.length > 0 ? (
-                                   <>
-                                        <Text fontSize="lg" fontWeight="bold" mb={2}>
-                                             Matching Categories
-                                        </Text>
+                         {(filterType === 'all' || filterType === 'categories') && (
+                              <Animated.View style={[animationStyle]}>
+                                   {loadingCategories ? (
+                                        <HStack flexWrap="wrap" justifyContent="space-between">
+                                             {[...Array(4)].map((_, index) => (
+                                                  <Skeleton
+                                                       key={index}
+                                                       h="100px"
+                                                       w="45%"
+                                                       m={2}
+                                                       borderRadius="12"
+                                                       startColor="gray.300"
+                                                       endColor="gray.100"
+                                                  />
+                                             ))}
+                                        </HStack>
+                                   ) : categoryError ? (
+                                        <Center>
+                                             <Text color="red.500">Failed to load categories.</Text>
+                                        </Center>
+                                   ) : searchQuery && filteredCategories.length > 0 ? (
+                                        <>
+                                             <Text fontSize="lg" fontWeight="bold" mb={2}>
+                                                  Matching Categories
+                                             </Text>
+                                             <Box
+                                                  display={'flex'}
+                                                  flexDirection={'row'}
+                                                  alignItems={'flex-start'}
+                                                  justifyContent={'flex-start'}
+                                                  flexWrap={'wrap'}>
+                                                  {filteredCategories.map((category, index) => (
+                                                       <CategoryCard
+                                                            key={index}
+                                                            category={{
+                                                                 name: category,
+                                                                 bgColor: categoryColors[
+                                                                      index % categoryColors.length
+                                                                 ]?.color,
+                                                                 border: categoryColors[
+                                                                      index % categoryColors.length
+                                                                 ]?.border,
+                                                            }}
+                                                       />
+                                                  ))}
+                                             </Box>
+                                        </>
+                                   ) : (
                                         <Box
                                              display={'flex'}
                                              flexDirection={'row'}
                                              alignItems={'flex-start'}
                                              justifyContent={'flex-start'}
                                              flexWrap={'wrap'}>
-                                             {filteredCategories.map((category, index) => (
+                                             {categories.map((category, index) => (
                                                   <CategoryCard
                                                        key={index}
                                                        category={{
@@ -183,76 +233,75 @@ const SearchScreen = () => {
                                                   />
                                              ))}
                                         </Box>
-                                   </>
-                              ) : (
-                                   <Box
-                                        display={'flex'}
-                                        flexDirection={'row'}
-                                        alignItems={'flex-start'}
-                                        justifyContent={'flex-start'}
-                                        flexWrap={'wrap'}>
-                                        {categories.map((category, index) => (
-                                             <CategoryCard
-                                                  key={index}
-                                                  category={{
-                                                       name: category,
-                                                       bgColor: categoryColors[
-                                                            index % categoryColors.length
-                                                       ]?.color,
-                                                       border: categoryColors[
-                                                            index % categoryColors.length
-                                                       ]?.border,
-                                                  }}
-                                             />
-                                        ))}
-                                   </Box>
-                              )}
-                         </Animated.View>
+                                   )}
+                              </Animated.View>
+                         )}
 
-                         <Animated.View style={[animationStyle]}>
-                              {loadingProducts ? (
-                                   <HStack flexWrap="wrap" justifyContent="space-between">
-                                        {[...Array(4)].map((_, index) => (
-                                             <Box key={index} w="45%" m={2}>
-                                                  <Skeleton
-                                                       h="150px"
-                                                       borderRadius="8"
-                                                       startColor="gray.300"
-                                                       endColor="gray.100"
-                                                  />
-                                                  <VStack mt={2} space={2}>
+                         {(filterType === 'all' || filterType === 'products') && (
+                              <Animated.View style={[animationStyle]}>
+                                   {loadingProducts ? (
+                                        <HStack flexWrap="wrap" justifyContent="space-between">
+                                             {[...Array(4)].map((_, index) => (
+                                                  <Box key={index} w="45%" m={2}>
                                                        <Skeleton
-                                                            h="10px"
-                                                            w="70%"
+                                                            h="150px"
+                                                            borderRadius="8"
                                                             startColor="gray.300"
                                                             endColor="gray.100"
                                                        />
-                                                       <Skeleton
-                                                            h="10px"
-                                                            w="50%"
-                                                            startColor="gray.300"
-                                                            endColor="gray.100"
+                                                       <VStack mt={2} space={2}>
+                                                            <Skeleton
+                                                                 h="10px"
+                                                                 w="70%"
+                                                                 startColor="gray.300"
+                                                                 endColor="gray.100"
+                                                            />
+                                                            <Skeleton
+                                                                 h="10px"
+                                                                 w="50%"
+                                                                 startColor="gray.300"
+                                                                 endColor="gray.100"
+                                                            />
+                                                       </VStack>
+                                                  </Box>
+                                             ))}
+                                        </HStack>
+                                   ) : productError ? (
+                                        <Center>
+                                             <Text color="red.500">Failed to load products.</Text>
+                                        </Center>
+                                   ) : searchQuery && filteredProducts.length > 0 ? (
+                                        <>
+                                             <Text fontSize="lg" fontWeight="bold" mt={4} mb={2}>
+                                                  Matching Products
+                                             </Text>
+                                             <Box
+                                                  display={'flex'}
+                                                  flexDirection={'row'}
+                                                  alignItems={'flex-start'}
+                                                  justifyContent={'flex-start'}
+                                                  flexWrap={'wrap'}>
+                                                  {filteredProducts.map((product, index) => (
+                                                       <ProductCard
+                                                            key={index}
+                                                            product={{
+                                                                 name: product.title,
+                                                                 location: 'Sample Location',
+                                                                 price: product.price,
+                                                                 image: product.image,
+                                                            }}
                                                        />
-                                                  </VStack>
+                                                  ))}
                                              </Box>
-                                        ))}
-                                   </HStack>
-                              ) : productError ? (
-                                   <Center>
-                                        <Text color="red.500">Failed to load products.</Text>
-                                   </Center>
-                              ) : searchQuery && filteredProducts.length > 0 ? (
-                                   <>
-                                        <Text fontSize="lg" fontWeight="bold" mt={4} mb={2}>
-                                             Matching Products
-                                        </Text>
+                                        </>
+                                   ) : (
                                         <Box
                                              display={'flex'}
                                              flexDirection={'row'}
                                              alignItems={'flex-start'}
                                              justifyContent={'flex-start'}
                                              flexWrap={'wrap'}>
-                                             {filteredProducts.map((product, index) => (
+                                             {products.map((product, index) => (
                                                   <ProductCard
                                                        key={index}
                                                        product={{
@@ -264,28 +313,9 @@ const SearchScreen = () => {
                                                   />
                                              ))}
                                         </Box>
-                                   </>
-                              ) : (
-                                   <Box
-                                        display={'flex'}
-                                        flexDirection={'row'}
-                                        alignItems={'flex-start'}
-                                        justifyContent={'flex-start'}
-                                        flexWrap={'wrap'}>
-                                        {products.map((product, index) => (
-                                             <ProductCard
-                                                  key={index}
-                                                  product={{
-                                                       name: product.title,
-                                                       location: 'Sample Location',
-                                                       price: product.price,
-                                                       image: product.image,
-                                                  }}
-                                             />
-                                        ))}
-                                   </Box>
-                              )}
-                         </Animated.View>
+                                   )}
+                              </Animated.View>
+                         )}
                     </VStack>
                </ScrollView>
           </SafeAreaView>
